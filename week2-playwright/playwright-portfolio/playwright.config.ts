@@ -5,8 +5,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: process.env.CI ? 4 : undefined,
+  reporter: process.env.CI
+    ? [['html'], ['github']]
+    : [['html']],
   
   use: {
     baseURL: 'https://dou.ua',

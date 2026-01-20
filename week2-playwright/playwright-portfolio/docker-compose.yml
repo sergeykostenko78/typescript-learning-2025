@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  tests:
+    build: .
+    volumes:
+      - ./playwright-report:/app/playwright-report
+
+

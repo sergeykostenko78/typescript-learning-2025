@@ -1,0 +1,47 @@
+  name: CI
+  on:
+    push:
+      branches: [main]
+    pull_request:
+      branches: [main]
+  jobs:
+    test:
+      strategy:
+        matrix:
+          shardIndex: [1, 2, 3, 4]
+          shardTotal: [4]
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: week2-playwright/playwright-portfolio
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Setup node
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+        - name: Cache node modules
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: npm-${{ hashFiles('week2-playwright/playwright-portfolio/package-lock.json') }}
+        - name: Cache Playwright browsers
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/ms-playwright
+            key: playwright-${{ hashFiles('week2-playwright/playwright-portfolio/package-lock.json') }}
+        - name: Install dependencies
+          run: npm ci
+        - name: Install Playwright browsers
+          run: npx playwright install --with-deps
+        - name: Shard run
+          run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}      
+        - name: Upload Artifacts on Failure
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: test-failure-artifacts-${{ matrix.shardIndex }}
+            path: playwright-report/
+
+    
