@@ -1,0 +1,17 @@
+{
+  "name": "saucedemo-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright test suite for Sauce Demo e-commerce site",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}
