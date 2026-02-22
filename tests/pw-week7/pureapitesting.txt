@@ -1,0 +1,307 @@
+================================================================================
+WEEK 7 — PART 2: PURE API TESTING (10 tests)
+================================================================================
+Time: 6 hours
+Site: https://jsonplaceholder.typicode.com (free fake REST API, no signup)
+Docs: https://jsonplaceholder.typicode.com/guide/
+Key rule: NO browser. NO page. Pure `request` context only.
+================================================================================
+
+ABOUT JSONPLACEHOLDER
+---------------------
+Free fake REST API. 6 resources available:
+
+  /posts      100 posts      { id, title, body, userId }
+  /comments   500 comments   { id, name, email, body, postId }
+  /albums     100 albums     { id, title, userId }
+  /photos     5000 photos    { id, title, url, thumbnailUrl, albumId }
+  /todos      200 todos      { id, title, completed, userId }
+  /users      10 users       { id, name, username, email, address, phone, website, company }
+
+All CRUD methods supported: GET, POST, PUT, PATCH, DELETE
+Nested routes work:  /posts/1/comments  (comments for post 1)
+Filtering works:     /posts?userId=1    (posts by user 1)
+
+IMPORTANT: POST/PUT/PATCH/DELETE are SIMULATED. Data won't actually persist.
+That's fine — you're testing request/response contracts, not a real database.
+
+================================================================================
+
+SETUP
+-----
+Create these files inside your pw-week7 project:
+  - helpers/types/api.types.ts       (TypeScript interfaces)
+  - helpers/apiClient.ts             (reusable API helper class)
+  - tests/api/jsonplaceholder.spec.ts (all 10 API tests)
+
+In playwright.config.ts add a separate project for API tests:
+  {
+    name: 'api',
+    testDir: './tests/api',
+    use: {
+      baseURL: 'https://jsonplaceholder.typicode.com',
+    },
+  }
+
+================================================================================
+
+STEP 1: BUILD TYPESCRIPT INTERFACES + API CLIENT (1-1.5 hours)
+================================================================================
+
+File: helpers/types/api.types.ts
+---------------------------------
+Create interfaces for the resources you'll test:
+
+  Post {
+    id: number;
+    title: string;
+    body: string;
+    userId: number;
+  }
+
+  Comment {
+    id: number;
+    postId: number;
+    name: string;
+    email: string;
+    body: string;
+  }
+
+  User {
+    id: number;
+    name: string;
+    username: string;
+    email: string;
+    address: {
+      street: string;
+      suite: string;
+      city: string;
+      zipcode: string;
+      geo: { lat: string; lng: string; }
+    };
+    phone: string;
+    website: string;
+    company: {
+      name: string;
+      catchPhrase: string;
+      bs: string;
+    };
+  }
+
+  CreatePostRequest {
+    title: string;
+    body: string;
+    userId: number;
+  }
+
+  CreatePostResponse extends CreatePostRequest {
+    id: number;
+  }
+
+File: helpers/apiClient.ts
+---------------------------
+Class: JsonPlaceholderClient
+Constructor: takes APIRequestContext
+
+Methods:
+
+  getPosts(): Promise<Post[]>
+    → GET /posts
+
+  getPost(id: number): Promise<Post>
+    → GET /posts/{id}
+
+  getPostsByUser(userId: number): Promise<Post[]>
+    → GET /posts?userId={userId}
+
+  getCommentsByPost(postId: number): Promise<Comment[]>
+    → GET /posts/{postId}/comments
+
+  getUsers(): Promise<User[]>
+    → GET /users
+
+  getUser(id: number): Promise<User>
+    → GET /users/{id}
+
+  createPost(data: CreatePostRequest): Promise<CreatePostResponse>
+    → POST /posts
+
+  updatePost(id: number, data: Post): Promise<Post>
+    → PUT /posts/{id}
+
+  patchPost(id: number, data: Partial<Post>): Promise<Post>
+    → PATCH /posts/{id}
+
+  deletePost(id: number): Promise<number>
+    → DELETE /posts/{id}, returns status code
+
+IMPORTANT:
+  - Each method should check status code and throw on unexpected errors
+  - Use response.json() to parse, then cast to your interface type
+  - Keep it clean — no console.logs in the client, only in tests if needed
+
+================================================================================
+
+STEP 2: WRITE 10 API TESTS (4-4.5 hours)
+================================================================================
+
+File: tests/api/jsonplaceholder.spec.ts
+
+Use Playwright's built-in `request` fixture (NOT page).
+Import your JsonPlaceholderClient and create it in beforeAll or a fixture.
+
+--- TEST 1: GET all posts ---
+  GET /posts
+  Assert:
+    - Status 200
+    - Response is array with length 100
+    - First post has: id, title, body, userId (all defined)
+    - id of first post === 1
+
+--- TEST 2: GET single post ---
+  GET /posts/1
+  Assert:
+    - Status 200
+    - Response has id === 1
+    - Response has userId === 1
+    - title and body are non-empty strings
+
+--- TEST 3: GET posts filtered by user ---
+  GET /posts?userId=1
+  Assert:
+    - Status 200
+    - Response is array (length should be 10 for userId=1)
+    - EVERY post in response has userId === 1
+
+--- TEST 4: GET comments for a post (nested route) ---
+  GET /posts/1/comments
+  Assert:
+    - Status 200
+    - Response is array with length 5
+    - Each comment has: id, postId, name, email, body
+    - EVERY comment has postId === 1
+    - Each email is a valid format (contains @)
+
+--- TEST 5: GET single user (complex nested object) ---
+  GET /users/1
+  Assert:
+    - Status 200
+    - Response has id === 1
+    - Response has nested address with: street, city, zipcode
+    - Response has nested company with: name, catchPhrase, bs
+    - Response has nested address.geo with: lat, lng
+
+--- TEST 6: GET non-existent resource (negative test) ---
+  GET /posts/999
+  Assert:
+    - Status 404
+    - Response body is empty object {}
+
+--- TEST 7: POST create new post ---
+  POST /posts with { title: "Test Post", body: "Test Body", userId: 1 }
+  Assert:
+    - Status 201
+    - Response has id (should be 101 — next after existing 100)
+    - Response has title matching sent title
+    - Response has body matching sent body
+    - Response has userId matching sent userId
+
+--- TEST 8: PUT update post (full replace) ---
+  PUT /posts/1 with { id: 1, title: "Updated", body: "Updated Body", userId: 1 }
+  Assert:
+    - Status 200
+    - Response title === "Updated"
+    - Response body === "Updated Body"
+    - Response id === 1
+
+--- TEST 9: PATCH update post (partial) ---
+  PATCH /posts/1 with { title: "Patched Title" }
+  Assert:
+    - Status 200
+    - Response title === "Patched Title"
+    - Response still has body and userId (not wiped out by partial update)
+
+--- TEST 10: DELETE post ---
+  DELETE /posts/1
+  Assert:
+    - Status 200
+    - Response body is empty object {}
+
+================================================================================
+
+BONUS TESTS (if you finish early)
+================================================================================
+
+--- BONUS 1: Data-driven test ---
+  Create array of 5 different post objects
+  Use for...of or test.describe loop
+  POST each one, assert each returns 201 with correct data
+
+--- BONUS 2: GET all users and validate structure ---
+  GET /users
+  Assert array of 10 users
+  Each user has ALL required nested fields (address, company, geo)
+
+--- BONUS 3: Cross-resource validation ---
+  GET /users/1 → get user
+  GET /posts?userId=1 → get user's posts
+  GET /posts/{firstPostId}/comments → get comments on first post
+  Assert the chain: user exists → has posts → posts have comments
+
+================================================================================
+
+STEP 3: RUN & VERIFY
+================================================================================
+
+Run only API tests:
+  npx playwright test --project=api
+
+All 10 must pass. Check:
+  - No flaky tests (run 3 times)
+  - No hardcoded baseURL in tests (comes from config)
+  - Types are used everywhere (no `any` type)
+  - API client methods are actually used (don't make raw fetch calls in tests)
+
+================================================================================
+
+COMMIT STRATEGY
+================================================================================
+After types + client:   git commit -m "feat: add JsonPlaceholderClient with TS types"
+After tests 1-5:        git commit -m "feat: add GET API tests (posts, comments, users)"
+After tests 6-10:       git commit -m "feat: complete 10 API tests with CRUD operations"
+After bonus (optional): git commit -m "feat: add bonus data-driven and cross-resource tests"
+
+================================================================================
+
+EXIT CRITERIA (you must answer YES to all)
+================================================================================
+[ ] Can you write an API test using `request` context without `page` or `browser`?
+[ ] Can you explain the difference between `request` fixture and `page` fixture?
+[ ] Can you create TypeScript interfaces for API responses (including nested objects)?
+[ ] Can you build a reusable API client class that another dev could pick up and use?
+[ ] Can you test all CRUD operations (GET, POST, PUT, PATCH, DELETE)?
+[ ] Can you write negative tests for APIs (404 for missing resource)?
+[ ] Can you test nested routes (/posts/1/comments)?
+[ ] Can you test query parameter filtering (/posts?userId=1)?
+[ ] Can you configure a separate Playwright project for API-only tests?
+[ ] Do all 10 tests pass consistently (not flaky)?
+[ ] Is there ZERO usage of `any` type in your code?
+
+================================================================================
+
+NOTES
+================================================================================
+- JSONPlaceholder is a FAKE API. POST/PUT/PATCH/DELETE don't persist.
+  That's fine — you're testing request/response contracts.
+- The docs/guide page is: https://jsonplaceholder.typicode.com/guide/
+  Open it in browser, read it, try the examples in browser console first.
+- You can explore the API directly in your browser:
+  Just visit https://jsonplaceholder.typicode.com/posts in browser → see JSON
+  Visit https://jsonplaceholder.typicode.com/users/1 → see single user
+  This helps you understand the data BEFORE writing tests.
+- This is YOUR code. No Claude Code for this part.
+  Playwright API testing docs: https://playwright.dev/docs/api-testing
+
+================================================================================
+REPORT AT CHECKPOINT 3: "API tests X/10 done" or "Stuck on [specific issue]"
+================================================================================
