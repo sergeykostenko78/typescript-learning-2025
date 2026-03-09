@@ -1,0 +1,230 @@
+================================================================================
+WEEK 7 — PART 1: EXERCISES 2 & 3 (SKIPPED — DO THEM NOW)
+================================================================================
+Time: ~4 hours total
+Site: https://www.saucedemo.com
+Key rule: NO CLAUDE CODE. Write every line by hand.
+================================================================================
+
+EXERCISE 2: API INTERCEPTION FIXTURE FACTORY (2 hours)
+================================================================================
+
+Goal: Build a reusable fixture that creates API mocks on demand.
+
+File: fixtures/apiMock.fixture.ts
+
+WHAT YOU'RE BUILDING:
+---------------------
+
+A fixture called `mockAPI` that gives your tests an object with 3 methods:
+  - mockRoute(url, responseData, status?)  → intercept a URL, return fake data
+  - mockError(url, errorCode)              → intercept a URL, return an error
+  - getInterceptedRequests(url)            → return array of requests that hit that URL
+
+Think of it as a mini Postman mock server inside your test.
+
+REQUIREMENTS:
+-------------
+1. The fixture wraps around `page` (it needs page to call page.route())
+2. It tracks ALL intercepted requests internally (store them in a Map or array)
+3. mockRoute should:
+   - Call page.route() to intercept matching URLs
+   - Return the provided responseData as JSON with the given status (default 200)
+   - Push the intercepted request info into the tracking array
+4. mockError should:
+   - Call page.route() to intercept matching URLs
+   - Return the given error code (e.g. 500) with an error body
+5. getInterceptedRequests should:
+   - Return all tracked requests that matched the given URL
+   - Each tracked request should include: url, method, postData (if any)
+6. On teardown: call page.unroute() for all mocked routes, clear tracking
+
+SKELETON TO START FROM (fill in the implementation):
+-----------------------------------------------------
+import { test as base, Page, Route } from '@playwright/test';
+
+type MockAPI = {
+  mockRoute: (url: string, responseData: object, status?: number) => Promise<void>;
+  mockError: (url: string, errorCode: number) => Promise<void>;
+  getInterceptedRequests: (url: string) => InterceptedRequest[];
+};
+
+type InterceptedRequest = {
+  url: string;
+  method: string;
+  postData: string | null;
+};
+
+// Now create the fixture using base.extend<{ mockAPI: MockAPI }>({...})
+// You figure out the implementation.
+
+WRITE 3 TESTS USING THIS FIXTURE:
+----------------------------------
+
+Test 1: "Mock inventory API and verify UI renders mocked products"
+  - Use mockRoute to intercept whatever API Sauce Demo calls for inventory
+    (Hint: Sauce Demo is a static site, so mock the page navigation instead,
+     OR mock any XHR/fetch calls if they exist. Inspect network tab first!)
+  - Alternative approach: mock a known API endpoint, navigate, verify behavior
+  - The point is: you prove mockRoute WORKS and returns your fake data
+
+Test 2: "Mock API error 500 and verify error handling"
+  - Use mockError to return 500 for a route
+  - Navigate or trigger the action that calls that route
+  - Verify the UI handles the error (or at minimum, verify the mock fired)
+
+Test 3: "Intercept request and verify payload"
+  - Navigate through a flow that makes requests (e.g. login, add to cart)
+  - Use getInterceptedRequests to check what was sent
+  - Assert the request URL, method, and/or postData are correct
+
+NOTE ON SAUCE DEMO:
+  Sauce Demo is mostly static HTML, not a heavy API-driven SPA.
+  If you can't find real API calls to mock, that's OK. You can:
+  - Mock image loading URLs (verify broken images vs working)
+  - Mock any network request the page makes
+  - Or use page.route() to intercept navigation itself
+  The SKILL you're building is the fixture pattern, not the specific mocks.
+
+EXIT CRITERIA FOR EXERCISE 2:
+-----------------------------
+[ ] mockRoute fixture works — intercepts URL and returns custom JSON
+[ ] mockError fixture works — returns specified error status code
+[ ] getInterceptedRequests tracks and returns request details
+[ ] Teardown unroutes all mocked routes (no leaking between tests)
+[ ] You can explain what page.route() does without looking at docs
+[ ] You can explain what route.fulfill() does without looking at docs
+[ ] You can explain what route.abort() does without looking at docs
+[ ] 3 tests pass using the mockAPI fixture
+
+================================================================================
+
+EXERCISE 3: COMPOSITE FIXTURE — COMBINING EVERYTHING (2 hours)
+================================================================================
+
+Goal: Merge all your fixtures into one export and use multiple fixtures
+      together in a single test.
+
+STEP 1: Create barrel file
+---------------------------
+File: fixtures/index.ts
+
+This file should:
+  - Import your auth fixture (from Exercise 1)
+  - Import your mockAPI fixture (from Exercise 2)
+  - Add a NEW testData fixture (defined below)
+  - Add a NEW performance fixture (defined below)
+  - Export a single `test` and `expect` that has ALL fixtures merged
+
+HOW TO MERGE FIXTURES:
+  You can't just spread them. You need to chain .extend() calls:
+
+  const test = base
+    .extend<{ authenticatedPage: ... }>({ ... })
+    .extend<{ mockAPI: ... }>({ ... })
+    .extend<{ testData: ... }>({ ... })
+    .extend<{ performance: ... }>({ ... });
+
+  OR define all fixtures in a single .extend<>() call.
+
+  Figure out which approach works. This is the learning.
+
+STEP 2: Create testData fixture
+---------------------------------
+Add to fixtures/index.ts (or separate file, your choice)
+
+The testData fixture provides an object with methods:
+  - randomName(): string      → returns a random first + last name
+  - randomZip(): string       → returns a random 5-digit zip code
+  - randomAddress(): string   → returns a random street address
+
+DO NOT use external libraries. Use simple JS:
+  - Random name: pick from hardcoded arrays of first/last names
+  - Random zip: Math.floor(Math.random() * 90000 + 10000).toString()
+  - Random address: random number + random street name from array
+
+This fixture has NO setup/teardown. It just provides the helper object.
+
+STEP 3: Create performance fixture
+------------------------------------
+Add to fixtures/index.ts (or separate file, your choice)
+
+The performance fixture:
+  - Setup: records Date.now() as startTime
+  - Provides an object with methods:
+    - markStart(): void           → resets the timer
+    - getElapsed(): number        → returns ms since last markStart (or setup)
+    - assertLoadTime(maxMs): void → throws if elapsed > maxMs
+  - Teardown: logs total test duration to console (optional)
+
+STEP 4: Write 4 tests using combined fixtures
+----------------------------------------------
+File: tests/composite/composite.spec.ts
+
+Import `test` and `expect` from your barrel file (fixtures/index.ts).
+Each test should use MULTIPLE fixtures together.
+
+Test 1: "Authenticated user with mocked inventory sees custom products"
+  Uses: authenticatedPage + mockAPI
+  - Auth fixture logs in
+  - mockAPI mocks some route
+  - Verify the combined behavior
+
+Test 2: "Authenticated user completes checkout with generated test data"
+  Uses: authenticatedPage + testData
+  - Auth fixture logs in as standard_user
+  - Add item to cart, go to checkout
+  - Fill checkout form using testData.randomName(), testData.randomZip()
+  - Complete checkout, verify success
+
+Test 3: "Page loads within acceptable time"
+  Uses: authenticatedPage + performance
+  - Auth fixture logs in
+  - performance.markStart()
+  - Navigate to inventory page
+  - performance.assertLoadTime(3000)  ← must load under 3 seconds
+
+Test 4: "Full E2E with all fixtures combined"
+  Uses: authenticatedPage + mockAPI + testData + performance
+  - Auth logs in
+  - Mock some route
+  - Use generated test data for checkout
+  - Assert page load time is reasonable
+  - This test proves ALL fixtures work together without conflicts
+
+EXIT CRITERIA FOR EXERCISE 3:
+-----------------------------
+[ ] Barrel file (fixtures/index.ts) exports a single `test` with all fixtures
+[ ] testData fixture generates random but valid data (no external libs)
+[ ] performance fixture measures time and can assert max load time
+[ ] All 4 fixtures can be used in the SAME test without conflicts
+[ ] 4 composite tests pass
+[ ] You can create a new fixture from scratch in under 10 minutes
+[ ] You can explain how fixture merging/chaining works
+[ ] You understand why barrel files are useful (single import for everything)
+
+================================================================================
+
+COMMIT STRATEGY
+================================================================================
+After Exercise 2:  git commit -m "feat: add API interception mock fixture"
+After Exercise 3:  git commit -m "feat: add composite fixtures with barrel export"
+
+================================================================================
+
+WHY THIS MATTERS FOR SENIOR AQA
+================================================================================
+Your skill matrix says Senior AQA must:
+  "Designs, codes, verifies, tests, documents, amends and refactors
+   complex programs/scripts and integration software services."
+
+A parameterized auth fixture = simple script.
+A mock fixture factory = moderately complex.
+Composing 4 fixtures into one test = COMPLEX.
+
+Exercise 3 is the difference between "I can write tests" and
+"I can architect a test framework." That's Senior level.
+
+================================================================================
+REPORT: "Exercise 2 done" / "Exercise 3 done" / "Part 1 COMPLETE"
+================================================================================

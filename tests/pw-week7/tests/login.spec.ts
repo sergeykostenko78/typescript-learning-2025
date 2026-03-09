@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/authFixture';
+import { test, expect } from '../fixtures/auth.fixture';
 
     test.describe('standard user', () => {
         test.use({ userType: 'standard' });
