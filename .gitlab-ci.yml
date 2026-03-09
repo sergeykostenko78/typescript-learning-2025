@@ -1,0 +1,27 @@
+  before_script:
+    - cd week2-playwright/playwright-portfolio
+
+  stages:
+    - test
+
+  playwright-tests:
+    stage: test
+    image: mcr.microsoft.com/playwright:v1.57.0-jammy
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      - if: '$CI_COMMIT_BRANCH == "main"'
+    cache:
+      key:
+        files:
+          - week2-playwright/playwright-portfolio/package-lock.json
+      paths:
+        - ~/.npm
+    script:
+      - npm ci
+      - npx playwright test
+    artifacts:
+      when: on_failure
+      paths:
+        - week2-playwright/playwright-portfolio/playwright-report/
+        - week2-playwright/playwright-portfolio/test-results/
+      expire_in: 7 days

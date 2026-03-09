@@ -1,0 +1,90 @@
+OBJECTIVE: Build Playwright Test Suite for Sauce Demo E-commerce Site
+
+SITE: https://www.saucedemo.com
+CREDENTIALS: 
+- Valid user: standard_user / secret_sauce
+- Locked user: locked_out_user / secret_sauce
+- Problem user: problem_user / secret_sauce
+
+PROJECT SETUP:
+- Framework: Playwright + TypeScript
+- Pattern: Page Object Model
+- Location: tests/saucedemo/
+
+TEST COVERAGE REQUIREMENTS (20 tests):
+
+CATEGORY 1: Authentication (4 tests)
+1. Login with valid credentials - verify redirect to inventory page
+2. Login with invalid password - verify error message displayed
+3. Login with locked user - verify locked out error message
+4. Logout - verify redirect to login page
+
+CATEGORY 2: Product Catalog (5 tests)
+5. Sort products by name A-Z - verify correct order
+6. Sort products by name Z-A - verify correct order
+7. Sort products by price low-high - verify correct order
+8. Sort products by price high-low - verify correct order
+9. Navigate to product details - verify product info displayed
+
+CATEGORY 3: Shopping Cart (5 tests)
+10. Add single item to cart - verify cart badge count = 1
+11. Add multiple items to cart - verify cart badge count = 3
+12. Remove item from cart - verify cart badge count decreases
+13. Cart persistence - add item, refresh page, verify item still in cart
+14. Navigate to cart page - verify all added items displayed
+
+CATEGORY 4: Checkout Flow (4 tests)
+15. Complete full checkout - verify order confirmation
+16. Checkout validation - try checkout without items, verify error
+17. Checkout form validation - submit empty form, verify error messages
+18. Cancel checkout - verify return to cart page
+
+CATEGORY 5: Advanced (2 tests)
+19. Full E2E flow - login → add 3 items → checkout → verify success
+20. Mobile viewport test - repeat test #19 on mobile resolution (375x667)
+
+TECHNICAL REQUIREMENTS:
+- Use Page Object Model pattern (create LoginPage, InventoryPage, CartPage, CheckoutPage classes)
+- Use custom fixtures for authenticated state
+- Add proper TypeScript interfaces for test data
+- Include assertions with expect()
+- Add test descriptions with test.describe() blocks
+- Use proper selectors (data-test attributes where available)
+- Add comments explaining complex logic
+
+SUCCESS CRITERIA:
+✅ All 20 tests written and passing
+✅ Page Object classes created (4 minimum: Login, Inventory, Cart, Checkout)
+✅ Custom fixture for "authenticated user" state
+✅ TypeScript interfaces for Product, CartItem, CheckoutInfo
+✅ Zero linting errors
+✅ Tests can run in parallel (no flakiness)
+✅ Execution time < 2 minutes for all tests
+✅ Professional code structure and naming
+
+FILE STRUCTURE:
+tests/
+  saucedemo/
+    pages/
+      BasePage.ts
+      LoginPage.ts
+      InventoryPage.ts
+      CartPage.ts
+      CheckoutPage.ts
+    fixtures/
+      authFixture.ts
+      testData.ts
+    specs/
+      auth.spec.ts (tests 1-4)
+      inventory.spec.ts (tests 5-9)
+      cart.spec.ts (tests 10-14)
+      checkout.spec.ts (tests 15-18)
+      e2e.spec.ts (tests 19-20)
+
+DELIVERABLES:
+1. All source files committed to git
+2. All tests passing when running: npx playwright test
+3. README.md updated with test coverage stats
+4. No console errors or warnings
+
+TIME ESTIMATE: 6-8 hours

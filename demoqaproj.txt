@@ -1,0 +1,232 @@
+OBJECTIVE: Build Advanced Playwright Test Suite with API Testing and Visual Regression
+
+SITE: https://demoqa.com
+REASON: More complex than Sauce Demo - realistic modern web app with forms, modals, tables, alerts, iframes
+
+PROJECT SETUP:
+- Framework: Playwright + TypeScript
+- Pattern: Page Object Model (inherit from existing BasePage)
+- Location: tests/demoqa/
+- New skills: API mocking, Visual testing, Advanced interactions
+
+TEST COVERAGE REQUIREMENTS (20 tests):
+
+CATEGORY 1: Forms & Validation (4 tests)
+1. Text Box - Fill form with valid data, verify success message
+2. Text Box - Submit empty required fields, verify validation errors
+3. Text Box - Verify email format validation (invalid email shows error)
+4. Practice Form - Fill complete registration form, verify modal confirmation
+
+CATEGORY 2: Alerts, Windows & Frames (4 tests)
+5. Browser Alerts - Handle simple alert and verify text
+6. Confirm Alert - Accept confirm box and verify result
+7. Prompt Alert - Enter text in prompt and verify result
+8. Nested Frames - Switch between frames and extract text from each
+
+CATEGORY 3: Widgets & Interactions (4 tests)
+9. Autocomplete - Type partial text, select from suggestions, verify selection
+10. Date Picker - Select date from calendar widget, verify format
+11. Slider - Move slider to specific value, verify tooltip
+12. Progress Bar - Start progress, wait for completion, verify 100%
+
+CATEGORY 4: Dynamic Content & Tables (4 tests)
+13. Dynamic Properties - Wait for button to be enabled after 5 seconds
+14. Sortable Table - Click column header, verify table sorted correctly
+15. Web Tables - Add new row, edit existing row, delete row, verify changes
+16. Broken Images - Detect broken images on page (check natural width = 0)
+
+CATEGORY 5: API Testing & Visual Regression (4 tests)
+17. API Mock - Intercept API call, return mock data, verify UI displays mocked data
+18. API Mock - Simulate API error (500), verify error message shown to user
+19. Visual Regression - Take screenshot of home page, compare with baseline
+20. Visual Regression - Take screenshot of form page, detect layout changes
+
+TECHNICAL REQUIREMENTS:
+
+1. PAGE OBJECT MODEL:
+   - Create BasePage (if not exists - reuse from Week 5)
+   - Create 5+ specialized pages:
+     * FormsPage
+     * AlertsPage
+     * WidgetsPage
+     * TablesPage
+     * HomePage
+   - Each page must have methods, not just locators
+   - Use inheritance from BasePage
+
+2. CUSTOM FIXTURES (MANDATORY - you must create these yourself):
+   - Create authFixture.ts with pre-loaded page fixture
+   - Create apiMockFixture.ts for API interception setup
+   - Create visualTestFixture.ts with screenshot comparison utilities
+   - All fixtures must follow pattern:
+```typescript
+     export const test = base.extend<YourFixtureType>({
+         yourFixtureName: async ({ page }, use) => {
+             // setup
+             await use(result);
+             // teardown
+         }
+     });
+```
+
+3. API MOCKING:
+   - Use page.route() to intercept API calls
+   - Mock successful responses
+   - Mock error responses (500, 404)
+   - Verify UI handles both scenarios
+
+4. VISUAL TESTING:
+   - Install: npm install -D @playwright/test
+   - Use page.screenshot() for baseline
+   - Use expect(page).toHaveScreenshot() for comparison
+   - Store screenshots in tests/visual-regression/
+
+5. ADVANCED INTERACTIONS:
+   - Frame switching: page.frame() or page.frameLocator()
+   - Alert handling: page.on('dialog', dialog => dialog.accept())
+   - Date picker: click calendar, select date programmatically
+   - Drag and drop: locator.dragTo()
+   - Wait for dynamic elements: waitForSelector with timeout
+
+6. DATA MANIPULATION:
+   - Use .map() to transform data
+   - Use .filter() to find specific items
+   - Use .sort() to verify sorting
+   - Use .reduce() if needed for calculations
+
+7. TYPESCRIPT INTERFACES:
+   - FormData interface for form inputs
+   - TableRow interface for table data
+   - ApiResponse interface for mocked API data
+   - MockConfig interface for API mock settings
+
+SUCCESS CRITERIA:
+✅ All 20 tests written and passing
+✅ 5+ Page Object classes created with proper methods
+✅ 3 custom fixtures implemented (auth, apiMock, visualTest)
+✅ API mocking working (intercept + verify)
+✅ Visual regression tests working (baseline + comparison)
+✅ TypeScript interfaces defined (4+ interfaces)
+✅ Zero linting errors
+✅ Tests run in parallel without conflicts
+✅ Execution time < 3 minutes for all tests
+✅ No hardcoded waits - only waitForSelector()
+✅ Professional naming conventions throughout
+
+FILE STRUCTURE:
+tests/
+  demoqa/
+    pages/
+      BasePage.ts (reuse from Week 5 or create)
+      FormsPage.ts
+      AlertsPage.ts
+      WidgetsPage.ts
+      TablesPage.ts
+      HomePage.ts
+    fixtures/
+      authFixture.ts (NEW - you must understand this)
+      apiMockFixture.ts (NEW - you must understand this)
+      visualTestFixture.ts (NEW - you must understand this)
+      testData.ts
+    interfaces/
+      FormData.ts
+      TableRow.ts
+      ApiResponse.ts
+    specs/
+      forms.spec.ts (tests 1-4)
+      alerts.spec.ts (tests 5-8)
+      widgets.spec.ts (tests 9-12)
+      tables.spec.ts (tests 13-16)
+      advanced.spec.ts (tests 17-20)
+    visual-regression/
+      (baseline screenshots stored here)
+
+VISUAL REGRESSION SETUP:
+1. First run generates baseline: npx playwright test --update-snapshots
+2. Subsequent runs compare against baseline
+3. Differences shown in test-results/
+
+API MOCKING EXAMPLE STRUCTURE:
+```typescript
+// In apiMockFixture.ts or directly in test
+await page.route('**/api/users', route => {
+    route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ users: [...] })
+    });
+});
+```
+
+VISUAL TESTING EXAMPLE:
+```typescript
+await page.goto('https://demoqa.com');
+await expect(page).toHaveScreenshot('homepage.png', {
+    maxDiffPixels: 100
+});
+```
+
+ALERTS HANDLING EXAMPLE:
+```typescript
+page.on('dialog', async dialog => {
+    expect(dialog.message()).toContain('expected text');
+    await dialog.accept('optional input');
+});
+await page.click('button-that-triggers-alert');
+```
+
+FRAMES HANDLING EXAMPLE:
+```typescript
+const frameLocator = page.frameLocator('#frame-id');
+await frameLocator.locator('button').click();
+```
+
+DELIVERABLES:
+1. All 20 tests passing
+2. Custom fixtures working (you must be able to explain how they work)
+3. API mocking demonstrated
+4. Visual regression baseline created
+5. All code committed to git with meaningful commit messages
+6. README.md updated with:
+   - New test count (55 total)
+   - API testing section
+   - Visual regression section
+   - How to run different test categories
+
+LEARNING OBJECTIVES (Exit Criteria):
+By end of Week 6, you must be able to:
+✅ Create custom fixtures from scratch without examples
+✅ Explain how fixtures work (setup → use → teardown)
+✅ Mock API responses and verify UI behavior
+✅ Handle alerts, confirms, prompts programmatically
+✅ Work with iframes and nested frames
+✅ Implement visual regression testing
+✅ Use advanced locator strategies
+✅ Write data-driven tests with .map() and .filter()
+✅ Confidence level: 7-8/10
+
+TIME ESTIMATE: 12-16 hours (more complex than Week 5)
+
+DIFFICULTY: INTERMEDIATE-ADVANCED
+- Week 5 was foundation
+- Week 6 adds real-world complexity
+- You'll struggle more, that's intentional
+- Claude Code will help, but YOU must understand the output
+
+IMPORTANT NOTES:
+- DemoQA site can be slow - add proper waits
+- Some elements have tricky selectors - use Playwright Inspector
+- Visual tests may fail on first run (that's normal, update snapshots)
+- API mocking requires understanding of route interception
+- Fixtures are CRITICAL - don't just copy, understand the pattern
+
+WHEN YOU GET STUCK:
+1. Use Playwright Inspector: npx playwright codegen https://demoqa.com
+2. Check Playwright docs: https://playwright.dev
+3. Review Week 5 code for patterns
+4. Ask your mentor (me) specific questions
+
+COMMIT STRATEGY:
+- After each category (4 tests): git commit -m "feat: add [category] tests"
+- After fixtures: git commit -m "feat: add custom fixtures for auth, API, visual"
+- Final: git commit -m "feat: complete Week 6 - 20 DemoQA tests with advanced patterns"
