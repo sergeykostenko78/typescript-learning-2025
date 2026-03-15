@@ -1,0 +1,221 @@
+================================================================================
+WEEK 8 — PART 3: TYPESCRIPT ESSENTIALS FOR ASSESSMENT
+================================================================================
+Time: ~3 hours
+Project: pw-week8 (add to your existing Part 1 project)
+================================================================================
+
+WHY THIS PART MATTERS FOR ASSESSMENT
+-------------------------------------
+Your skill matrix "Programming languages" is at Basic/Intermediate.
+Senior AQA requires: "designs, codes, verifies complex scripts"
+
+You've been USING TypeScript for 3 weeks but can you EXPLAIN it?
+Assessment will ask: "What are generics? Interfaces vs types? Async/await?"
+
+This part is half coding, half "make sure you can explain what you wrote."
+
+================================================================================
+
+TASK 1: TYPESCRIPT CONCEPTS YOU MUST KNOW (1 hour)
+================================================================================
+
+Create file: src/helpers/typescript-practice.ts
+
+Write working code examples for each concept below.
+NOT copy-paste — write from understanding. Run each with ts-node or in a test.
+
+CONCEPT 1: Interfaces vs Types
+-------------------------------
+// Interface — use for object shapes (preferred for public APIs)
+interface User {
+  name: string;
+  age: number;
+  email?: string;  // optional property
+}
+
+// Type — use for unions, intersections, primitives
+type Status = 'active' | 'inactive' | 'banned';
+type UserWithStatus = User & { status: Status };
+
+// Practice: Create an interface for a TestResult
+// with: testName, passed (boolean), duration (number), error (optional string)
+// Then create a type that is TestResult with an added 'retryCount' field
+
+CONCEPT 2: Generics
+---------------------
+// Generic = "works with any type, decided at usage time"
+// You've already used this: test.extend<{ mockAPI: MockAPI }>
+
+// Practice: Write a generic function
+function firstElement<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
+// Call it with string[], number[], User[] — it works with all
+
+// Practice: Write a generic interface for API responses
+interface ApiResponse<T> {
+  status: number;
+  data: T;
+  error?: string;
+}
+// Use it: ApiResponse<User>, ApiResponse<User[]>, ApiResponse<string>
+
+CONCEPT 3: Async/Await + Promise types
+----------------------------------------
+// You use async/await everywhere but can you type it?
+
+// Practice: Write a function with explicit return type
+async function fetchUser(id: number): Promise<User> {
+  // ... fetch logic
+  return { name: 'Test', age: 25 };
+}
+
+// Practice: Write a function that returns Promise<void>
+async function clickAndWait(page: Page): Promise<void> {
+  await page.click('button');
+  await page.waitForLoadState();
+}
+
+CONCEPT 4: Enums
+-----------------
+// Useful for test configuration and fixed value sets
+
+enum Environment {
+  DEV = 'https://dev.example.com',
+  STG = 'https://stg.example.com',
+  PROD = 'https://prod.example.com',
+}
+
+enum UserRole {
+  STANDARD = 'standard_user',
+  LOCKED = 'locked_out_user',
+  PROBLEM = 'problem_user',
+}
+
+// Practice: Create an enum for test priority: CRITICAL, HIGH, MEDIUM, LOW
+// Use it in a test data interface
+
+CONCEPT 5: Utility types
+--------------------------
+// Built-in TypeScript helpers you should know
+
+// Partial<T> — makes all properties optional
+// You used this already: Partial<Post> for PATCH requests
+
+// Pick<T, Keys> — select specific properties
+type UserName = Pick<User, 'name' | 'email'>;
+
+// Omit<T, Keys> — exclude specific properties
+type UserWithoutAge = Omit<User, 'age'>;
+
+// Record<Keys, Type> — create object type with known keys
+type TestResults = Record<string, boolean>; // { [testName]: passed }
+
+// Practice: Given your User interface:
+// Create a type for "user creation" that omits 'id' (server generates it)
+// Create a type for "user update" that makes everything Partial
+
+DELIVERABLE: typescript-practice.ts with working examples of all 5 concepts.
+
+================================================================================
+
+TASK 2: REFACTOR YOUR WEEK 8 CODE WITH PROPER TYPES (1 hour)
+================================================================================
+
+Go through your Part 1 code and improve the TypeScript:
+
+CHECKLIST:
+[ ] Every function has explicit return type (no implicit any)
+[ ] Every parameter has a type
+[ ] JSON imports have matching interfaces
+[ ] No usage of 'any' anywhere (search your code for ': any')
+[ ] Test data arrays are typed: const users: UserTestData[] = ...
+[ ] Config objects use proper types
+
+FIND AND FIX:
+  Search your project for these anti-patterns:
+    - "any"         → replace with proper type
+    - "as any"      → replace with proper cast or type
+    - No return type → add explicit : Promise<void> or : string etc
+    - Untyped parameters → add types
+
+DELIVERABLE: Zero 'any' usage in your entire pw-week8 project.
+
+================================================================================
+
+TASK 3: ASSESSMENT PREP — EXPLAIN YOUR CODE (1 hour)
+================================================================================
+
+This is not coding. This is preparation for verbal assessment.
+
+Create file: my-notes/assessment-prep.md
+
+For each topic, write a 3-5 sentence explanation AS IF you're answering
+an assessor's question. Use your OWN words, not textbook definitions.
+
+QUESTION 1: "What is Page Object Model and why do you use it?"
+  Your answer: ...
+
+QUESTION 2: "What are fixtures in Playwright and how do they differ from
+  beforeEach/afterEach?"
+  Your answer: ...
+
+QUESTION 3: "How do you handle test data in your framework?"
+  Your answer: ... (mention JSON files, interfaces, data-driven approach)
+
+QUESTION 4: "How do you run tests in CI/CD?"
+  Your answer: ... (mention Azure Pipelines, triggers, browser install)
+
+QUESTION 5: "What's the difference between parallel and serial execution?
+  When would you use each?"
+  Your answer: ...
+
+QUESTION 6: "How do you handle flaky tests?"
+  Your answer: ... (mention retries, proper waits, test isolation)
+
+QUESTION 7: "What TypeScript features do you use in test automation?"
+  Your answer: ... (mention interfaces, generics, async/await, enums)
+
+QUESTION 8: "What is API testing and how do you do it in Playwright?"
+  Your answer: ... (mention request context, no browser, typed responses)
+
+QUESTION 9: "How do you manage different test environments?"
+  Your answer: ... (mention .env files, config, baseURL)
+
+QUESTION 10: "What test reporting tools have you used?"
+  Your answer: ... (mention HTML reporter, Allure, what each shows)
+
+DELIVERABLE: assessment-prep.md with answers to all 10 questions.
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you explain interfaces vs types and when to use each?
+[ ] Can you explain generics and give a real example from your code?
+[ ] Can you explain async/await and Promise return types?
+[ ] Can you use Partial<T>, Pick<T>, Omit<T>, Record<K,V>?
+[ ] Is there zero 'any' in your entire project?
+[ ] Can you answer all 10 assessment questions out loud without notes?
+
+================================================================================
+
+ASSESSMENT READINESS CHECK
+================================================================================
+After completing this task, rate yourself honestly:
+
+"If my assessment was TOMORROW, could I..."
+
+[ ] ...explain my test framework architecture?
+[ ] ...write a data-driven test from scratch on a whiteboard?
+[ ] ...explain CI/CD pipeline stages?
+[ ] ...explain how fixtures work and why they matter?
+[ ] ...write a basic API test without looking at docs?
+[ ] ...explain TypeScript generics with a real example?
+
+If any answer is NO — that's what you focus on before the assessment.
+
+================================================================================
+REPORT: "Part 3 done — assessment prep complete" or "Weak on [topic]"
+================================================================================

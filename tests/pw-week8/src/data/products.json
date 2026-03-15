@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Sauce Labs Backpack",
+    "expectedPrice": "$29.99"
+  },
+  {
+    "name": "Sauce Labs Bike Light",
+    "expectedPrice": "$9.99"
+  },
+  {
+    "name": "Sauce Labs Bolt T-Shirt",
+    "expectedPrice": "$15.99"
+  }
+]

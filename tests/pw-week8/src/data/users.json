@@ -1,0 +1,20 @@
+[
+  {
+    "username": "standard_user",
+    "password": "secret_sauce",
+    "shouldLogin": true,
+    "description": "valid standard user"
+  },
+  {
+    "username": "locked_out_user",
+    "password": "secret_sauce",
+    "shouldLogin": false,
+    "description": "locked out user gets error"
+  },
+  {
+    "username": "invalid_user",
+    "password": "wrong_password",
+    "shouldLogin": false,
+    "description": "invalid credentials"
+  }
+]

@@ -1,0 +1,188 @@
+================================================================================
+WEEK 8 — PART 2: REAL PROJECT ANALYSIS + CI/CD UNDERSTANDING
+================================================================================
+Time: ~3 hours
+Project: YOUR REAL PROJECT (read-only analysis, no coding)
+================================================================================
+
+WHY THIS PART MATTERS FOR ASSESSMENT
+-------------------------------------
+Your skill matrix gaps (Senior AQA):
+  - Systems Integration and Build: "provides technical expertise to enable
+    configuration of software and equipment for systems testing"
+  - Release and Deployment: "leads assessment, analysis, planning of releases"
+  - Methods and Tools: "provides advice and guidance on adoption of methods"
+  - BDD: listed as "Basic" in your specific skills
+
+You won't build a CI pipeline from scratch this week.
+You WILL understand one well enough to explain it in your assessment.
+
+================================================================================
+
+TASK 1: ANALYZE THE PROJECT STRUCTURE (45 min)
+================================================================================
+
+Open your real project. Answer these questions IN WRITING.
+Create a file: my-notes/project-analysis.md
+
+SECTION 1: Architecture
+  - What is the role of src/pageFixture.ts? How does it differ from POM?
+  - What do src/hooks/hooks.ts do? (Before/After hooks?)
+  - How is test data organized? (look at test_data/ folder structure)
+  - What pattern do they use for page elements? (not POM — what then?)
+
+SECTION 2: Cucumber/BDD
+  - Open cucumber.js — what does it configure?
+  - Find a .feature file — read the Gherkin syntax (Given/When/Then)
+  - Find the corresponding step definitions — how do steps map to code?
+  - How does Cucumber connect to Playwright? (through hooks? fixtures?)
+
+SECTION 3: Scripts
+  - What does scripts/collect_urls_from_sitemap.js do?
+  - What does scripts/run-tests.ts do? Why not just `npx playwright test`?
+  - What does scripts/open-report.ts do?
+
+Write 2-3 sentences for each question. Not essays — just proof you understand.
+
+DELIVERABLE: project-analysis.md with answers to all questions above.
+
+================================================================================
+
+TASK 2: READ AND UNDERSTAND AZURE PIPELINES (1 hour)
+================================================================================
+
+Your real project has 5 pipeline files:
+  - azure-pipelines.yml              (main pipeline)
+  - azure-pipelines-basic.yml        (simple version)
+  - azure-pipelines-allure.yml       (with Allure reporting)
+  - azure-pipelines-saucelabs.yml    (with SauceLabs)
+  - azure-pipelines-scheduled.yml    (runs on schedule)
+
+WHAT TO DO:
+
+Start with azure-pipelines-basic.yml (simplest one).
+
+Read it line by line. For each section, write what it does:
+
+  trigger:          ← What triggers this pipeline? (push, PR, schedule?)
+  pool:             ← What machine runs the tests? (ubuntu, windows?)
+  steps:            ← What steps execute in order?
+
+Typical pipeline steps you'll see:
+  - task: NodeTool   ← Installs Node.js
+  - script: npm ci   ← Installs dependencies
+  - script: npx playwright install  ← Installs browsers
+  - script: npx playwright test     ← Runs tests
+  - task: PublishTestResults         ← Publishes results to Azure
+
+Then read azure-pipelines-allure.yml — what's DIFFERENT from basic?
+Then read azure-pipelines-scheduled.yml — how does the schedule work?
+
+Add to your project-analysis.md:
+
+SECTION 4: CI/CD Pipelines
+  - What triggers the basic pipeline?
+  - What Node.js version do they use?
+  - How do they install Playwright browsers in CI?
+  - How does the Allure pipeline differ from basic?
+  - What schedule does the scheduled pipeline use? (cron syntax)
+  - How do test results get published/visible?
+
+You do NOT need to create your own pipeline this week.
+You need to UNDERSTAND these well enough to explain them in an assessment.
+
+DELIVERABLE: Section 4 added to project-analysis.md.
+
+================================================================================
+
+TASK 3: UNDERSTAND ALLURE REPORTING (45 min)
+================================================================================
+
+Your real project uses Allure. This is industry-standard test reporting.
+
+WHAT TO DO:
+
+Step 1: Look at the allure-results/ folder
+  - What file types are in there? (.json? .xml? .txt?)
+  - These are raw results — not human readable yet
+
+Step 2: Check if Allure is in package.json dependencies
+  - Look for: allure-playwright, allure-commandline, or similar
+  - Note the package names
+
+Step 3: Check playwright.config.ts
+  - Find the reporter configuration
+  - How is Allure configured as a reporter?
+
+Step 4: If you can run the project locally:
+  - Run a few tests
+  - Generate the Allure report (usually: npx allure generate allure-results)
+  - Open it (usually: npx allure open)
+  - Explore: dashboard, suites, graphs, timeline
+
+Add to your project-analysis.md:
+
+SECTION 5: Allure Reporting
+  - What packages enable Allure in this project?
+  - How is Allure configured in playwright.config.ts?
+  - What information does the Allure report show?
+  - How does Allure differ from Playwright's built-in HTML reporter?
+
+DELIVERABLE: Section 5 added to project-analysis.md.
+
+================================================================================
+
+TASK 4: ENVIRONMENT CONFIGURATION (30 min)
+================================================================================
+
+Your real project has conf/envs/.env.stg (staging environment).
+
+WHAT TO DO:
+
+Step 1: Open .env.stg
+  - What variables are defined? (BASE_URL? API_KEY? credentials?)
+  - How does the project read these values? (look for process.env in code)
+
+Step 2: Check playwright.config.ts
+  - Is there a dotenv import? (import dotenv or require('dotenv'))
+  - How does baseURL get set from env variables?
+
+Step 3: Check if there are other env files (.env.prod, .env.dev)
+  - How would you switch between environments?
+
+Add to your project-analysis.md:
+
+SECTION 6: Environment Configuration
+  - What environment variables does the project use?
+  - How are env variables loaded into Playwright config?
+  - How would you run tests against a different environment?
+
+DELIVERABLE: Section 6 added to project-analysis.md.
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you explain the project structure to another QA on your team?
+[ ] Can you explain what Cucumber/BDD adds on top of Playwright?
+[ ] Can you read an Azure Pipeline YAML and explain each step?
+[ ] Can you explain what triggers a pipeline (push, PR, schedule)?
+[ ] Can you explain what Allure reporting shows vs HTML reporter?
+[ ] Can you explain how environment configs work (.env files)?
+[ ] Do you have a written project-analysis.md with all sections?
+
+================================================================================
+
+WHY WRITTEN NOTES MATTER
+================================================================================
+In your Senior AQA assessment, they will ask:
+  "How does CI/CD work in your project?"
+  "What reporting tools do you use?"
+  "How do you manage test environments?"
+
+Your project-analysis.md is your study guide for those questions.
+Don't just read the files — write down what you learned.
+
+================================================================================
+REPORT: "Part 2 done — analysis complete" or "Need access to [something]"
+================================================================================

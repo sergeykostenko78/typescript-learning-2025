@@ -1,0 +1,299 @@
+================================================================================
+WEEK 8 — PART 1: ADVANCED TEST PATTERNS + TYPESCRIPT
+================================================================================
+Time: ~4 hours
+Project: pw-week8 (new project, scaffold from scratch again)
+Site: https://www.saucedemo.com
+================================================================================
+
+WHY THIS PART MATTERS FOR ASSESSMENT
+-------------------------------------
+Your skill matrix gaps:
+  - Programming/Software Development: need Level 4 (complex scripts)
+  - Testing (Senior): "implements scalable and reliable automated tests"
+  - Methods and Tools: "tailors processes in line with agreed standards"
+
+This part directly fills those gaps with patterns you'll use daily.
+
+================================================================================
+
+PROJECT SETUP (15 min)
+================================================================================
+mkdir pw-week8 && cd pw-week8
+npm init -y
+npm init playwright@latest
+
+Create folder structure:
+  src/
+    pages/           ← page objects
+    fixtures/        ← your custom fixtures
+    helpers/         ← utility functions
+    data/            ← JSON test data files
+  tests/
+    data-driven/
+    tags/
+  playwright.config.ts
+
+Copy your Sauce Demo page objects from previous weeks if you want.
+
+================================================================================
+
+TASK 1: DATA-DRIVEN TESTS FROM JSON FILES (1.5 hours)
+================================================================================
+
+CONCEPT:
+  Instead of hardcoding test data inside tests, you store it in JSON files.
+  Tests read the JSON and loop through each data set.
+  This is how real projects work (look at your real project's test_data folder).
+
+STEP 1: Create test data files
+--------------------------------
+File: src/data/users.json
+
+[
+  {
+    "username": "standard_user",
+    "password": "secret_sauce",
+    "shouldLogin": true,
+    "description": "valid standard user"
+  },
+  {
+    "username": "locked_out_user",
+    "password": "secret_sauce",
+    "shouldLogin": false,
+    "description": "locked out user gets error"
+  },
+  {
+    "username": "invalid_user",
+    "password": "wrong_password",
+    "shouldLogin": false,
+    "description": "invalid credentials"
+  }
+]
+
+File: src/data/products.json
+
+[
+  {
+    "name": "Sauce Labs Backpack",
+    "expectedPrice": "$29.99"
+  },
+  {
+    "name": "Sauce Labs Bike Light",
+    "expectedPrice": "$9.99"
+  },
+  {
+    "name": "Sauce Labs Bolt T-Shirt",
+    "expectedPrice": "$15.99"
+  }
+]
+
+STEP 2: Create TypeScript interface for the data
+--------------------------------------------------
+File: src/data/types.ts
+
+  interface UserTestData {
+    username: string;
+    password: string;
+    shouldLogin: boolean;
+    description: string;
+  }
+
+  interface ProductTestData {
+    name: string;
+    expectedPrice: string;
+  }
+
+Export both interfaces.
+
+STEP 3: Write data-driven tests
+---------------------------------
+File: tests/data-driven/login.data-driven.spec.ts
+
+  - Import users.json (use: import users from '../../src/data/users.json')
+  - You may need to add "resolveJsonModule": true in tsconfig.json
+  - Loop through each user and create a test:
+
+    for (const user of users) {
+      test(`Login: ${user.description}`, async ({ page }) => {
+        // navigate to sauce demo
+        // fill username, password from user object
+        // click login
+        // if user.shouldLogin === true → assert inventory page loaded
+        // if user.shouldLogin === false → assert error message visible
+      });
+    }
+
+File: tests/data-driven/products.data-driven.spec.ts
+
+  - Import products.json
+  - Loop through each product:
+
+    for (const product of products) {
+      test(`Product price: ${product.name}`, async ({ page }) => {
+        // login as standard_user (hardcode or use fixture)
+        // find the product by name on inventory page
+        // assert its price matches product.expectedPrice
+      });
+    }
+
+DELIVERABLE: 6 tests total (3 login + 3 product), all data-driven from JSON.
+
+================================================================================
+
+TASK 2: TEST TAGGING AND SELECTIVE EXECUTION (1 hour)
+================================================================================
+
+CONCEPT:
+  In real projects you don't run ALL tests every time.
+  You tag tests and run subsets: smoke, regression, critical, etc.
+  Playwright uses grep for this.
+
+STEP 1: Add tags to your tests using @tag in test title
+---------------------------------------------------------
+
+  test('@smoke Login with valid user', async ({ page }) => { ... });
+  test('@regression Login with locked user', async ({ page }) => { ... });
+  test('@smoke @critical Product prices are correct', async ({ page }) => { ... });
+
+STEP 2: Configure grep in playwright.config.ts
+------------------------------------------------
+Add a project that runs only smoke tests:
+
+  {
+    name: 'smoke',
+    testDir: './tests',
+    grep: /@smoke/,
+    use: { ...devices['Desktop Chrome'] },
+  },
+  {
+    name: 'regression',
+    testDir: './tests',
+    grep: /@regression/,
+    use: { ...devices['Desktop Chrome'] },
+  },
+
+STEP 3: Run and verify
+------------------------
+  npx playwright test --project=smoke      ← only @smoke tests run
+  npx playwright test --project=regression  ← only @regression tests run
+  npx playwright test                       ← all tests run
+
+DELIVERABLE: At least 6 tests tagged, 2 project configs for selective runs.
+
+================================================================================
+
+TASK 3: PARALLEL, RETRIES, AND TIMEOUTS (1 hour)
+================================================================================
+
+CONCEPT:
+  Senior AQA must configure test execution for reliability and speed.
+  This means: parallel workers, retry on flaky tests, proper timeouts.
+
+STEP 1: Configure in playwright.config.ts
+-------------------------------------------
+Add/modify these settings:
+
+  export default defineConfig({
+    // Run tests in parallel
+    fullyParallel: true,
+
+    // Retry failed tests (useful for flaky UI tests)
+    retries: process.env.CI ? 2 : 0,
+    // ↑ This means: 2 retries in CI pipeline, 0 retries locally
+
+    // Number of parallel workers
+    workers: process.env.CI ? 2 : undefined,
+    // ↑ undefined = Playwright decides based on CPU cores
+
+    // Global timeout per test
+    timeout: 30_000, // 30 seconds
+
+    // Expect timeout (how long assertions wait)
+    expect: {
+      timeout: 5_000, // 5 seconds
+    },
+
+    // ... rest of config
+  });
+
+STEP 2: Add per-test timeout override
+---------------------------------------
+Write a test that demonstrates custom timeout:
+
+  test('Slow operation with extended timeout', async ({ page }) => {
+    test.setTimeout(60_000); // 60 seconds for this specific test
+    // ... some slow operation
+  });
+
+STEP 3: Add test.describe.configure for serial execution
+----------------------------------------------------------
+Some tests MUST run in order (e.g. create → verify → delete).
+Write a describe block that runs serially:
+
+  test.describe.configure({ mode: 'serial' });
+
+  test.describe('Checkout flow (serial)', () => {
+    test('Step 1: Add item to cart', async ({ page }) => { ... });
+    test('Step 2: Fill checkout info', async ({ page }) => { ... });
+    test('Step 3: Complete purchase', async ({ page }) => { ... });
+  });
+
+STEP 4: Verify parallel execution
+-----------------------------------
+  npx playwright test --workers=4    ← force 4 parallel workers
+  npx playwright test --workers=1    ← force sequential (for debugging)
+
+DELIVERABLE: Config with parallel/retries/timeouts + serial test suite.
+
+================================================================================
+
+TASK 4: HTML REPORT CONFIGURATION (30 min)
+================================================================================
+
+STEP 1: Configure HTML reporter in playwright.config.ts
+---------------------------------------------------------
+  reporter: [
+    ['html', { open: 'never', outputFolder: 'reports/html' }],
+    ['list'],  // console output while running
+  ],
+
+STEP 2: Run tests and open report
+-----------------------------------
+  npx playwright test
+  npx playwright show-report reports/html
+
+STEP 3: Look at the report
+----------------------------
+  - Find a failed test (break one on purpose) — see the screenshot, trace
+  - Find a retried test — see retry attempts
+  - Filter by tag — check if your @smoke/@regression shows up
+
+DELIVERABLE: HTML report generates to reports/html after every run.
+
+================================================================================
+
+COMMIT STRATEGY
+================================================================================
+After data-driven tests:    git commit -m "feat: add data-driven tests from JSON"
+After tagging:              git commit -m "feat: add test tagging and selective execution"
+After parallel/retries:     git commit -m "feat: configure parallel, retries, timeouts"
+After reporting:            git commit -m "feat: add HTML report configuration"
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you write data-driven tests that read from JSON files?
+[ ] Can you create TypeScript interfaces for test data?
+[ ] Can you tag tests and run only specific subsets?
+[ ] Can you explain what fullyParallel does?
+[ ] Can you explain what retries: 2 does and when to use it?
+[ ] Can you configure different timeout levels (global, per-test, expect)?
+[ ] Can you force serial execution when test order matters?
+[ ] Can you generate and read HTML test reports?
+[ ] Do you have at least 6 data-driven tests passing?
+
+================================================================================
+REPORT: "Part 1 done — X tests, config ready" or "Stuck on [issue]"
+================================================================================
