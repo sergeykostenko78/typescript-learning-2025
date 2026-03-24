@@ -1,17 +1,19 @@
 import { test, expect } from '@playwright/test';
 import users from '../../src/data/users.json';
 import { LoginPage } from '../../src/pages/LoginPage';
+import type { UserTestData } from '../../src/data/types';
 
     test.describe('Login data-driven', () => {
     
         let loginPage: LoginPage;
+        const typedUsers = users as UserTestData[];
 
         test.beforeEach(async ({ page }) => {
             loginPage = new LoginPage(page);
             await loginPage.navigate('https://www.saucedemo.com/');
         });
 
-        for (const user of users) {
+        for (const user of typedUsers) {
         test(`@smoke Login: ${user.description}`, async ({ page }) => {
             await loginPage.login(user.username, user.password);
             if (user.shouldLogin === true) {
