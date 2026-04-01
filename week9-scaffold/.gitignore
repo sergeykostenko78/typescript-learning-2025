@@ -1,0 +1,44 @@
+<<<<<<< HEAD
+# Dependencies
+node_modules/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.auth/
+playwright/.cache/
+
+# Build outputs
+dist/
+build/
+*.js
+*.js.map
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Debug files
+debug-screenshot.png
+=======
+
+# Playwright
+node_modules/
+allure-results/
+allure-report/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+>>>>>>> c01319d (feat: week9 scaffold with playwright config, fixtures, and pipeline)

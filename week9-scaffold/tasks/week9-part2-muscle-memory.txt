@@ -1,0 +1,211 @@
+================================================================================
+WEEK 9 — PART 2: BUILD MORE TESTS — MUSCLE MEMORY
+================================================================================
+Time: ~5 hours
+Project: pw-week9 (continue from Part 1)
+Sites: https://www.saucedemo.com + https://demoqa.com/books
+================================================================================
+
+WHY MORE TESTS
+---------------
+You have ~60 tests across 3 projects. That's good for learning.
+For assessment confidence you need to write tests WITHOUT THINKING
+about syntax. Like driving a car — you don't think about the pedals.
+
+This part: 15 new tests. Speed matters more than complexity.
+Target: write each test in under 10 minutes including assertions.
+
+================================================================================
+
+TASK 1: SAUCE DEMO — 5 TESTS YOU HAVEN'T WRITTEN (1.5 hours)
+================================================================================
+
+You've tested login, products, cart, checkout before.
+Now test what you HAVEN'T covered:
+
+TEST 1: @smoke Sorting — verify products sort A-Z correctly
+  - Login → inventory page
+  - Select sort dropdown → "Name (A to Z)"
+  - Get all product names into an array
+  - Assert array equals [...array].sort()
+
+TEST 2: @smoke Sorting — verify products sort by price low-to-high
+  - Login → inventory page
+  - Select sort dropdown → "Price (low to high)"
+  - Get all prices into a number array (strip "$", parseFloat)
+  - Assert each price <= next price
+
+TEST 3: @regression Remove item from cart via cart page
+  - Login → add item → go to cart
+  - Click "Remove" button
+  - Assert cart is empty (cart badge gone, no items listed)
+
+TEST 4: @regression Checkout with empty cart
+  - Login → go directly to cart (empty) → click checkout
+  - What happens? Assert the actual behavior (error? empty page?)
+
+TEST 5: @critical Full E2E with data-driven checkout info
+  - Create checkout-data.json with 2-3 data sets:
+    { firstName, lastName, postalCode }
+  - Data-driven: loop through each, complete full checkout flow
+  - Assert order confirmation for each
+
+RULES:
+  - Use POM (page objects) for all interactions
+  - Use your auth fixture for login
+  - Tag every test (@smoke, @regression, @critical)
+  - Each test must be independent (no shared state between tests)
+  - Type everything — no 'any'
+
+DELIVERABLE: 5 new Sauce Demo tests, all passing, all tagged.
+
+================================================================================
+
+TASK 2: DEMOQA BOOKS API — 5 API TESTS (1.5 hours)
+================================================================================
+
+Site: https://demoqa.com/BookStore/v1/Books
+This is a real REST API. No mocking — actual HTTP calls.
+
+Use Playwright's APIRequestContext (no browser needed).
+
+TEST 6: @smoke GET /BookStore/v1/Books — returns book list
+  - Assert status 200
+  - Assert response.books is an array
+  - Assert array length > 0
+
+TEST 7: @smoke GET /BookStore/v1/Book?ISBN=9781449325862 — returns single book
+  - Assert status 200
+  - Assert response has title, author, isbn properties
+  - Assert isbn matches what you requested
+
+TEST 8: @regression GET /BookStore/v1/Book?ISBN=invalid — returns error
+  - Assert status 400
+  - Assert response has error message
+
+TEST 9: @regression Verify book data structure matches interface
+  - Create interface:
+    interface Book {
+      isbn: string;
+      title: string;
+      subTitle: string;
+      author: string;
+      publish_date: string;
+      publisher: string;
+      pages: number;
+      description: string;
+      website: string;
+    }
+  - GET all books
+  - For each book, verify ALL properties exist and are correct types
+
+TEST 10: @smoke Verify specific books exist in the store
+  - Data-driven from JSON:
+    [
+      { "isbn": "9781449325862", "expectedTitle": "Git Pocket Guide" },
+      { "isbn": "9781449331818", "expectedTitle": "Learning JavaScript Design Patterns" }
+    ]
+  - For each: GET by ISBN, assert title matches
+
+RULES:
+  - Create a typed API helper: src/helpers/bookstore-api.ts
+  - All responses typed with interfaces
+  - No browser — use request fixture only
+  - Keep tests under 10 minutes each to write
+
+DELIVERABLE: 5 API tests, all passing, typed responses.
+
+================================================================================
+
+TASK 3: MIXED UI + API — 5 ADVANCED PATTERN TESTS (2 hours)
+================================================================================
+
+These tests combine multiple patterns you've learned.
+Each one exercises a different skill.
+
+TEST 11: @critical API mock — test UI with mocked book data
+  - Use page.route() to intercept GET /BookStore/v1/Books
+  - Return a fake response with exactly 2 books you define
+  - Navigate to demoqa.com/books
+  - Assert the UI shows exactly your 2 mocked books
+  (This tests: API mocking + UI assertions + typed mock data)
+
+TEST 12: @regression Screenshot comparison — inventory page layout
+  - Login to sauce demo
+  - Take a full-page screenshot
+  - Use toHaveScreenshot() for visual regression
+  - (First run creates baseline, subsequent runs compare)
+  (This tests: visual regression pattern)
+
+TEST 13: @smoke Multi-assertion with soft expects
+  - Login to sauce demo → inventory page
+  - Use expect.soft() to check ALL product cards have:
+    - A name (not empty)
+    - A price (matches $X.XX format)
+    - An "Add to cart" button
+    - An image (src not empty)
+  - If one product fails, test continues and reports ALL failures
+  (This tests: soft assertions + iteration over elements)
+
+TEST 14: @regression Custom fixture — timed test
+  - Create a fixture that measures test execution time:
+    timedTest: async ({ page }, use, testInfo) => {
+      const start = Date.now();
+      await use(page);
+      const duration = Date.now() - start;
+      console.log(`${testInfo.title}: ${duration}ms`);
+      // Attach timing to report
+      await testInfo.attach('timing', {
+        body: `Duration: ${duration}ms`,
+        contentType: 'text/plain',
+      });
+    }
+  - Use this fixture in a test
+  - Check the HTML report — your timing attachment should appear
+  (This tests: advanced fixture with testInfo + attachments)
+
+TEST 15: @critical Network monitoring — verify no failed requests
+  - Create a test that monitors ALL network requests during a flow:
+    const failedRequests: string[] = [];
+    page.on('requestfailed', request => {
+      failedRequests.push(`${request.method()} ${request.url()}`);
+    });
+  - Navigate through sauce demo: login → add to cart → checkout
+  - At the end, assert failedRequests.length === 0
+  (This tests: network event handling + real-world monitoring pattern)
+
+RULES:
+  - Each test demonstrates a DIFFERENT advanced pattern
+  - All tests tagged and independent
+  - Write a brief comment at the top of each test explaining the pattern
+
+DELIVERABLE: 5 advanced tests, all passing, each demonstrating a unique pattern.
+
+================================================================================
+
+TOTAL TESTS AFTER PART 2
+================================================================================
+  pw-week9 Part 1: ~10 tests (config experiments + baseline)
+  pw-week9 Part 2: 15 new tests
+  Previous weeks: ~60 tests
+  TOTAL: ~85 tests across 4 projects
+
+At 85+ tests you have genuine muscle memory. You can write tests
+without googling basic syntax. THAT is assessment-ready confidence.
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you write a Sauce Demo test from scratch in under 10 minutes?
+[ ] Can you write an API test with typed responses in under 10 minutes?
+[ ] Can you set up an API mock and verify UI renders mocked data?
+[ ] Can you use soft assertions and explain when they're useful?
+[ ] Can you create a custom fixture with testInfo attachments?
+[ ] Can you monitor network requests during a test?
+[ ] Are ALL 15 tests tagged, independent, typed, and passing?
+[ ] Can you write any of these patterns without looking at docs?
+
+================================================================================
+REPORT: "Part 2 done — X tests passing, total Y across all projects"
+================================================================================

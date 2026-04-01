@@ -1,0 +1,227 @@
+================================================================================
+WEEK 9 — PART 3: MOCK INTERVIEW SIMULATION
+================================================================================
+Time: ~4 hours (spread across 2-3 sessions)
+Project: No coding — verbal practice + written refinement
+================================================================================
+
+WHY THIS PART
+--------------
+You know the material. But knowing and EXPLAINING are different skills.
+Assessment interviews test your ability to articulate under pressure.
+This part trains your mouth, not your fingers.
+
+================================================================================
+
+TASK 1: VERBAL WARM-UP — EXPLAIN TO A RUBBER DUCK (1 hour)
+================================================================================
+
+Set a timer. Answer each question OUT LOUD. Not in your head — out loud.
+Record yourself on your phone if possible (you'll cringe, that's normal).
+
+TIME LIMIT: 2 minutes per answer. If you can't explain it in 2 minutes,
+you don't understand it well enough.
+
+Round 1: Technical fundamentals (30 min)
+------------------------------------------
+Answer out loud, 2 min each:
+
+  1. What is Page Object Model and why do you use it?
+  2. What are Playwright fixtures? How do they differ from beforeEach?
+  3. How do you handle test data in your framework?
+  4. What is the difference between interface and type in TypeScript?
+  5. Explain generics with a real example from your code.
+  6. What does fullyParallel: true do?
+  7. How do retries work and when should you use them?
+  8. What is the difference between test timeout and expect timeout?
+  9. How does API testing in Playwright work without a browser?
+  10. What is API mocking and why would you use it?
+
+SELF-ASSESSMENT after Round 1:
+  - Which answers flowed naturally?         → STRONG
+  - Which had awkward pauses or "ummm"?     → NEEDS WORK
+  - Which did you explain wrong then correct yourself? → DANGER ZONE
+
+Round 2: Architecture & process (30 min)
+------------------------------------------
+  11. Describe your test automation framework architecture.
+  12. How do you decide what to automate vs. keep manual?
+  13. Walk me through your CI/CD pipeline for test automation.
+  14. How do you handle flaky tests?
+  15. How would you introduce test automation to a manual-only team?
+
+These answers need STORIES, not definitions. Use STAR format:
+  Situation → Task → Action → Result
+
+If you don't have a real story, use your learning journey as the story.
+"When I started building my Playwright framework, I faced X. I solved
+it by Y. The result was Z."
+
+DELIVERABLE: List of strong answers vs. answers that need more practice.
+
+================================================================================
+
+TASK 2: FULL MOCK INTERVIEW — 30 MINUTES (1.5 hours)
+================================================================================
+
+Do this exercise with a friend, colleague, or alone with a timer.
+If alone: write each question on a card, shuffle, draw randomly.
+
+THE RULES:
+  - Set a 30-minute timer
+  - Answer 10 questions (3 min each)
+  - No notes, no docs, no IDE open
+  - Stand up if possible (simulates real interview energy)
+  - If you don't know an answer, say "I haven't done that in production,
+    but here's what I understand..." — then give your best answer
+
+INTERVIEW SCRIPT (mix of easy, medium, hard):
+-----------------------------------------------
+
+[WARM-UP]
+Q1: Tell me about yourself and your experience with test automation.
+    (Target: 90 seconds. Background + transition story + current skills)
+
+[TECHNICAL — MEDIUM]
+Q2: You have 200 tests that take 45 minutes to run. How do you speed it up?
+    (Target: parallel, sharding, smoke/regression split, CI optimization)
+
+[TECHNICAL — HARD]
+Q3: Write a data-driven test on a whiteboard. Explain your choices.
+    (Target: JSON file, interface, for loop, test function structure)
+
+[BEHAVIORAL]
+Q4: Tell me about a time you had to learn a new technology quickly.
+    (Target: STAR format with your Playwright learning journey)
+
+[TECHNICAL — MEDIUM]
+Q5: Compare Cypress and Playwright. When would you recommend each?
+    (Target: objective comparison, not just "Playwright is better")
+
+[TECHNICAL — HARD]
+Q6: What is dependency injection in the context of Playwright fixtures?
+    (Target: fixtures declare dependencies, Playwright provides them,
+    tests receive what they need without manual setup)
+
+[PROCESS]
+Q7: How do you measure the quality of a test automation suite?
+    (Target: pass rate, execution time, flaky rate, maintenance cost)
+
+[BEHAVIORAL]
+Q8: How do you handle disagreements with developers about test results?
+    (Target: data-driven approach, verify your own test first, collaborate)
+
+[TECHNICAL — EASY]
+Q9: What is the difference between toBeVisible() and toBeAttached()?
+    (Quick answer — 30 seconds max)
+
+[CLOSING — HARD]
+Q10: What's your biggest weakness as an automation engineer right now?
+     (Target: honest + action plan. "My CI/CD pipeline experience is
+     limited to learning projects. I'm filling that gap by analyzing
+     our real project's Azure Pipelines and writing pipeline configs
+     from scratch in my practice projects.")
+
+AFTER THE MOCK INTERVIEW:
+  Rate each answer 1-5:
+    5 = Nailed it, would impress an assessor
+    4 = Good, minor hesitation
+    3 = Acceptable, but lacked depth or examples
+    2 = Struggled, lost structure
+    1 = Failed to answer coherently
+
+  Any answer below 3 = study that topic tonight.
+
+DELIVERABLE: Written self-ratings for all 10 questions.
+
+================================================================================
+
+TASK 3: WEAKNESS ELIMINATION (1.5 hours)
+================================================================================
+
+Based on Task 1 and Task 2, you now know your weak answers.
+
+For each weak answer (rated below 4), do this:
+
+STEP 1: Write the answer down (assessment-prep.md, update from Week 8)
+  - 4-5 sentences maximum
+  - Must include ONE concrete example from your code/project
+  - Must include ONE number or metric
+
+STEP 2: Read it out loud 3 times
+  - First time: reading from notes
+  - Second time: glancing at notes
+  - Third time: from memory
+
+STEP 3: Explain it to someone
+  - Wife, friend, or your kid (seriously — if a child understands
+    your explanation of POM, an assessor definitely will)
+  - If no one available: record yourself and play it back
+
+COMMON WEAK SPOTS I PREDICT FOR YOU:
+--------------------------------------
+1. "Tell me about yourself" — people ramble. Script it:
+   "I'm a Senior Manual QA with X years of experience. Over the past
+   2 months I've been intensively learning test automation with Playwright
+   and TypeScript. I've built 80+ automated tests across multiple
+   projects using Page Object Model, custom fixtures, data-driven
+   patterns, and API testing. I'm ready to apply these skills as a
+   Senior AQA."
+   (Under 30 seconds. Practice until smooth.)
+
+2. CI/CD pipeline explanation — you can read YAML but explaining the
+   WHY behind each step is different:
+   "The pipeline triggers on every pull request. First it checks out
+   the code, then installs Node.js because Playwright runs on Node.
+   npm ci installs exact dependency versions for reproducible builds.
+   Playwright install --with-deps adds browser binaries and Linux
+   system libraries the browsers need. Then tests run. Finally,
+   regardless of pass or fail, we upload the HTML report as an artifact
+   so the team can review results."
+   (Each step has a WHY. Practice this flow.)
+
+3. "What's your weakness?" — most dangerous question:
+   BAD: "I'm a perfectionist" (cliché, meaningless)
+   BAD: "I don't know pipelines" (just admits a gap)
+   GOOD: "My hands-on CI/CD experience is still growing. I've studied
+   our Azure Pipelines configuration and written GitHub Actions from
+   scratch in practice, but I haven't yet built a production pipeline
+   for a team. My plan is to take ownership of our test pipeline config
+   in my first month as Senior AQA."
+   (Weakness + evidence of working on it + action plan = strong answer)
+
+DELIVERABLE: Updated assessment-prep.md with refined answers.
+             All weak answers practiced out loud 3+ times.
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you answer 10 random interview questions without notes?
+[ ] Can you keep each answer under 2 minutes?
+[ ] Can you tell your "about me" story in under 30 seconds?
+[ ] Can you explain CI/CD pipeline steps with WHY for each step?
+[ ] Have you practiced the "weakness" question with a genuine answer?
+[ ] Have you rated yourself honestly and eliminated answers below 3?
+
+================================================================================
+
+ASSESSMENT READINESS AFTER WEEK 9
+================================================================================
+By the end of this week you should be at:
+
+  Confidence:           8/10 (up from 7.5)
+  Technical depth:      Can write any test pattern from memory
+  Config knowledge:     Can write playwright.config.ts from memory
+  CI/CD:                Can write and explain pipeline files
+  Verbal readiness:     Can answer 10 questions without notes
+  Project knowledge:    Can explain real project architecture
+
+  OVERALL:              READY for assessment with 2 weeks to spare
+
+Those final 2 weeks = maintenance mode. Light practice, no cramming.
+Cramming before an assessment makes you WORSE, not better.
+
+================================================================================
+REPORT: "Part 3 done — verbal practice complete, weak spots: [list]"
+================================================================================

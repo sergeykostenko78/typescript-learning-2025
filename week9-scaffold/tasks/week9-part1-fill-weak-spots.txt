@@ -1,0 +1,302 @@
+================================================================================
+WEEK 9 — PART 1: FILL WEAK SPOTS (HANDS-ON, NOT READING)
+================================================================================
+Time: ~5 hours
+Project: pw-week9 (new project, scaffold from scratch — this is intentional)
+Site: https://www.saucedemo.com + https://demoqa.com
+================================================================================
+
+WHY A NEW PROJECT AGAIN
+-------------------------
+You've scaffolded 3 times already. This time the goal is SPEED.
+Time yourself. If you can't scaffold a working Playwright project with
+POM, fixtures, config, and first passing test in under 20 minutes,
+you're not ready for the assessment. That's your benchmark.
+
+================================================================================
+
+TASK 1: SCAFFOLD FROM MEMORY — NO DOCS, NO COPY (30 min)
+================================================================================
+
+Close all browser tabs. Close all previous project folders.
+Do this from memory:
+
+  mkdir pw-week9 && cd pw-week9
+  npm init -y
+  npm init playwright@latest
+
+Create folder structure from memory:
+  src/pages/
+  src/fixtures/
+  src/data/
+  tests/
+
+Create from memory (no copy-paste from previous projects):
+  - playwright.config.ts with:
+      - baseURL
+      - 2 projects (smoke + regression) with grep
+      - fullyParallel
+      - retries (2 in CI, 0 local)
+      - workers config
+      - timeout (global + expect)
+      - HTML reporter with custom output folder
+  - src/pages/LoginPage.ts (POM for sauce demo)
+  - src/fixtures/auth.fixture.ts (login fixture)
+  - One passing test that uses the fixture and has a @smoke tag
+
+SELF-CHECK: Can you write playwright.config.ts without looking at docs?
+  If NO — that's your gap. Write it wrong, check docs, delete, write again.
+  Repeat until you can do it from memory.
+
+DELIVERABLE: Working project with 1 passing @smoke test in < 20 min.
+
+================================================================================
+
+TASK 2: PARALLEL & RETRIES — BUILD INTUITION (1.5 hours)
+================================================================================
+
+You changed config values in Week 8 but didn't feel what they DO.
+This task makes the effects visible.
+
+EXERCISE 1: See parallel in action
+------------------------------------
+Create 6 simple tests that each take 3 seconds (use page.waitForTimeout(3000)).
+
+Run with different worker counts and TIME each run:
+  time npx playwright test --workers=1
+  time npx playwright test --workers=2
+  time npx playwright test --workers=4
+  time npx playwright test --workers=6
+
+Write down the results:
+  workers=1: ___ seconds (expect ~18s: 6 tests × 3s)
+  workers=2: ___ seconds (expect ~9s)
+  workers=4: ___ seconds (expect ~5s)
+  workers=6: ___ seconds (expect ~3s)
+
+Now you UNDERSTAND what workers does. Not theoretically — you measured it.
+
+EXERCISE 2: See retries in action
+-----------------------------------
+Create a deliberately flaky test:
+
+  test('Flaky test demo', async ({ page }) => {
+    const random = Math.random();
+    console.log(`Random value: ${random}`);
+    expect(random).toBeGreaterThan(0.3);
+    // This fails ~30% of the time
+  });
+
+Run with retries:
+  npx playwright test flaky.spec.ts --retries=0    ← fails sometimes
+  npx playwright test flaky.spec.ts --retries=3    ← usually passes
+
+Open the HTML report after the retried run:
+  npx playwright show-report reports/html
+
+Find the flaky test in the report. You'll see:
+  - Retry 1: FAILED
+  - Retry 2: PASSED (or still failed)
+  - The report shows EACH attempt
+
+NOW you understand retries. You've SEEN them in the report.
+
+EXERCISE 3: See timeouts in action
+------------------------------------
+Create a test that deliberately waits too long:
+
+  test('Timeout demo - global', async ({ page }) => {
+    await page.goto('https://www.saucedemo.com');
+    // This selector doesn't exist — will wait until timeout
+    await page.locator('#nonexistent-element').click();
+  });
+
+Run it. Note the error message and how long it waited.
+Then add a per-test timeout:
+
+  test('Timeout demo - custom', async ({ page }) => {
+    test.setTimeout(5_000); // Only 5 seconds for this test
+    await page.goto('https://www.saucedemo.com');
+    await page.locator('#nonexistent-element').click();
+  });
+
+Run it again. See the difference in wait time.
+
+Now try expect timeout:
+
+  test('Expect timeout demo', async ({ page }) => {
+    await page.goto('https://www.saucedemo.com');
+    // This will wait for expect.timeout (5s from config), not test timeout
+    await expect(page.locator('#nonexistent')).toBeVisible();
+  });
+
+Note: the error says "Timed out 5000ms waiting for expect..."
+That's your expect.timeout, separate from test timeout.
+
+EXERCISE 4: Serial vs parallel — feel the difference
+------------------------------------------------------
+Create a test file with a deliberate dependency:
+
+  let cartItemCount = 0;
+
+  test.describe('Parallel mode (default)', () => {
+    test('Add item', () => { cartItemCount++; console.log('Add:', cartItemCount); });
+    test('Check count', () => { console.log('Check:', cartItemCount); expect(cartItemCount).toBe(1); });
+  });
+
+Run it multiple times. Sometimes "Check count" runs BEFORE "Add item" and fails.
+
+Now add serial mode:
+
+  test.describe.configure({ mode: 'serial' });
+
+  test.describe('Serial mode', () => {
+    test('Add item', () => { cartItemCount++; });
+    test('Check count', () => { expect(cartItemCount).toBe(1); });
+  });
+
+This always passes because serial forces order.
+Also test: if the first serial test fails, ALL subsequent tests in that
+describe block are SKIPPED (not failed). Verify this by breaking test 1.
+
+DELIVERABLE: You can explain workers, retries, timeouts, serial/parallel
+from experience because you MEASURED and SAW the behavior.
+
+Write your observations in: my-notes/config-experiments.md
+
+================================================================================
+
+TASK 3: PIPELINE CONFIG FROM SCRATCH (1.5 hours)
+================================================================================
+
+You read pipeline YAML files in Week 8. Now you WRITE them.
+
+STEP 1: Write a GitHub Actions pipeline from memory
+-----------------------------------------------------
+File: .github/workflows/playwright.yml
+
+Write it without looking at docs or examples. Just what you remember.
+Then compare with a working example and fix your mistakes.
+
+Structure to write from memory:
+  name: ???
+  on: ???                    ← what triggers it?
+  jobs:
+    test:
+      runs-on: ???           ← what OS?
+      steps:
+        - ???                ← checkout code
+        - ???                ← setup node
+        - ???                ← install deps
+        - ???                ← install browsers
+        - ???                ← run tests
+        - ???                ← upload report
+
+After writing from memory, check each step:
+  [ ] Did you remember actions/checkout?
+  [ ] Did you remember actions/setup-node with node version?
+  [ ] Did you use npm ci (not npm install)?
+  [ ] Did you remember npx playwright install --with-deps?
+  [ ] Did you add artifact upload for reports?
+  [ ] Did you add if: always() to the upload step?
+
+STEP 2: Write an Azure Pipeline from memory
+---------------------------------------------
+File: azure-pipelines.yml
+
+Same exercise. Write from memory first, then compare with your real project.
+
+  trigger: ???
+  pool:
+    vmImage: ???
+  steps:
+    - task: ???              ← install node
+    - script: ???            ← install deps
+    - script: ???            ← install browsers
+    - script: ???            ← run tests
+    - task: ???              ← publish results
+
+Key differences from GitHub Actions to remember:
+  - "task:" vs "uses:" for built-in actions
+  - "script:" vs "run:" for shell commands
+  - "PublishTestResults" task for Azure DevOps test tab
+  - "PublishPipelineArtifact" vs "actions/upload-artifact"
+
+STEP 3: Make GitHub Actions actually run (if you have a GitHub repo)
+---------------------------------------------------------------------
+Push your pw-week9 project to GitHub with the workflow file.
+Watch it run. See it succeed or fail.
+Fix any issues until it passes.
+
+Nothing beats seeing YOUR pipeline run with YOUR tests.
+
+DELIVERABLE: Two pipeline files written from memory + corrections noted.
+
+================================================================================
+
+TASK 4: ALLURE SETUP FROM SCRATCH (1.5 hours)
+================================================================================
+
+You saw Allure in your real project. Now install and configure it yourself.
+
+STEP 1: Install Allure
+------------------------
+  npm install -D allure-playwright allure-commandline
+
+STEP 2: Configure in playwright.config.ts
+-------------------------------------------
+Add Allure as a reporter alongside HTML:
+
+  reporter: [
+    ['html', { open: 'never', outputFolder: 'reports/html' }],
+    ['allure-playwright', { outputFolder: 'allure-results' }],
+    ['list'],
+  ],
+
+STEP 3: Run tests and generate report
+---------------------------------------
+  npx playwright test
+  npx allure generate allure-results --clean -o allure-report
+  npx allure open allure-report
+
+STEP 4: Explore the Allure report
+-----------------------------------
+Answer these questions (write in my-notes/allure-notes.md):
+  - What does the Overview dashboard show?
+  - Where do you see pass/fail breakdown by suite?
+  - Where do you see test duration timeline?
+  - How does it differ from Playwright's HTML report?
+  - If you run tests twice, does the trend chart show up?
+
+STEP 5: Add Allure annotations to a test
+------------------------------------------
+  import { allure } from 'allure-playwright';
+
+  test('@smoke Login with valid user', async ({ page }) => {
+    await allure.severity('critical');
+    await allure.feature('Authentication');
+    await allure.story('Valid login');
+    // ... test code
+  });
+
+Run again, regenerate report. See how annotations appear in the report.
+
+DELIVERABLE: Allure working in pw-week9, annotations on at least 3 tests.
+
+================================================================================
+
+EXIT CRITERIA
+================================================================================
+[ ] Can you scaffold a Playwright project with full config from memory in < 20 min?
+[ ] Can you explain what workers=4 does and predict execution time impact?
+[ ] Can you explain retries and show where retry attempts appear in reports?
+[ ] Can you explain the difference between test timeout and expect timeout?
+[ ] Can you explain serial vs parallel and when to use each?
+[ ] Can you write a GitHub Actions pipeline from memory?
+[ ] Can you write an Azure Pipeline from memory?
+[ ] Can you install, configure, and generate an Allure report?
+[ ] Did you write your observations, not just run the exercises?
+
+================================================================================
+REPORT: "Part 1 done — config is muscle memory now" or "Still shaky on [X]"
+================================================================================
